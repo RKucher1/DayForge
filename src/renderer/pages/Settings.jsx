@@ -41,7 +41,8 @@ export default function Settings() {
   const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
-    window.api?.settings?.getAll().then(res => {
+    if (!window.api) return
+    window.api.settings.getAll().then(res => {
       if (res?.data) {
         const map = {}
         for (const { key, value } of res.data) map[key] = value
