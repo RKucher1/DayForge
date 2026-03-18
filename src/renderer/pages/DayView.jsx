@@ -1,8 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import useBlocks from '../hooks/useBlocks'
 import TimelineBlock from '../components/schedule/TimelineBlock'
 import BlockModal from '../components/schedule/BlockModal'
 import { timeToPercent } from '../utils/time'
+
+function getNowPercent() {
+  const now = new Date()
+  const h = now.getHours()
+  const m = now.getMinutes()
+  const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`
+  return timeToPercent(timeStr)
+}
 
 const HOURS = Array.from({ length: 13 }, (_, i) => {
   const h = 9 + i
@@ -10,8 +18,26 @@ const HOURS = Array.from({ length: 13 }, (_, i) => {
 })
 
 export default function DayView() {
-  const { blocks, isLoading, error } = useBlocks()
+  const { blocks, isLoading, error, selectedDate } = useBlocks()
   const [selectedBlock, setSelectedBlock] = useState(null)
+  const [nowPct, setNowPct] = useState(getNowPercent)
+  const timelineRef = useRef(null)
+
+  // Update the now-line every minute
+  useEffect(() => {
+    const tick = () => setNowPct(getNowPercent())
+    const id = setInterval(tick, 60_000)
+    // Scroll now-line into view on load
+    if (timelineRef.current) {
+      const pct = getNowPercent()
+      const scrollY = (pct / 100) * 720 - 200
+      timelineRef.current.scrollTo({ top: Math.max(0, scrollY), behavior: 'smooth' })
+    }
+    return () => clearInterval(id)
+  }, [])
+
+  const isToday = selectedDate === new Date().toISOString().slice(0, 10)
+  const showNow = isToday && nowPct >= 0 && nowPct <= 100
 
   if (isLoading) {
     return (
@@ -38,7 +64,7 @@ export default function DayView() {
   }
 
   return (
-    <div className="flex h-full p-4 gap-2">
+    <div className="flex h-full p-4 gap-2 overflow-y-auto" ref={timelineRef}>
       {/* Hour labels */}
       <div className="w-12 flex-shrink-0 relative" style={{ height: '720px' }}>
         {HOURS.map(({ label, value }) => (
@@ -62,6 +88,19 @@ export default function DayView() {
             style={{ top: timeToPercent(value) + '%' }}
           />
         ))}
+
+        {/* Current time indicator */}
+        {showNow && (
+          <div
+            className="absolute w-full z-10 pointer-events-none"
+            style={{ top: `${nowPct}%` }}
+          >
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--teal)' }} />
+              <div className="flex-1 h-px" style={{ background: 'var(--teal)', opacity: 0.6 }} />
+            </div>
+          </div>
+        )}
 
         {/* Blocks */}
         {blocks.map(block => (
