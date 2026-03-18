@@ -58,6 +58,7 @@ export default function WeekView() {
   const weekDates = Array.from({ length: 5 }, (_, i) => addDays(monday, i))
 
   const loadWeek = useCallback(async () => {
+    if (!window.api) { setIsLoading(false); return }
     setIsLoading(true)
     try {
       const [blocksRes, meetingsRes] = await Promise.all([

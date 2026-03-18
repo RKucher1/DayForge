@@ -41,17 +41,17 @@ export default function Settings() {
   const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
-    window.api.settings.getAll().then(res => {
-      if (res.data) {
+    window.api?.settings?.getAll().then(res => {
+      if (res?.data) {
         const map = {}
         for (const { key, value } of res.data) map[key] = value
         setSettings(s => ({ ...s, ...map }))
       }
-    })
+    }).catch(() => {})
   }, [])
 
   const saveSetting = async (key, value) => {
-    await window.api.settings.set(key, value)
+    await window.api?.settings?.set(key, value)
     setSettings(s => ({ ...s, [key]: value }))
     setSaved(true)
     setTimeout(() => setSaved(false), 1500)

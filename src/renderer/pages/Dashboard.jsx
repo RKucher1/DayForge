@@ -63,6 +63,7 @@ export default function Dashboard() {
     let cancelled = false
     async function load() {
       try {
+        if (!window.api) return
         const [sRes, stRes, l4Res, bwRes] = await Promise.all([
           window.api.stats.getWeekly(monday),
           window.api.stats.getStreak(),
