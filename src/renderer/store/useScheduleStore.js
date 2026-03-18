@@ -31,6 +31,7 @@ const useScheduleStore = create((set, get) => ({
 
   setDate: async (date) => {
     set({ selectedDate: date, isLoading: true, error: null })
+    if (!window.electronAPI) { set({ isLoading: false }); return }
     try {
       const response = await window.electronAPI.invoke('blocks:getByDate', { date })
       if (response.error) {
@@ -44,6 +45,7 @@ const useScheduleStore = create((set, get) => ({
   },
 
   setBlockStatus: async (id, status, note = '') => {
+    if (!window.electronAPI) return
     try {
       const response = await window.electronAPI.invoke('blocks:updateStatus', { id, status, note })
       if (response.error) {
